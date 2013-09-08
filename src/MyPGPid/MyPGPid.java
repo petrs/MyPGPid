@@ -181,18 +181,8 @@ public class MyPGPid extends Applet {
     private short incomingDataOffset = 0;
     private boolean chv = false;
     private short bNotExported = 0x55;
+ 
     
-
-    // *** Card-specific configuration: decomment only one section
-    // JCOP
-    final static byte  DEF_ALG = KeyPair.ALG_RSA_CRT;
-    final static short DEF_KEY_LEN = (short) 2048;	// bits
-    final static short DEF_CAKEYTYPE = KeyBuilder.TYPE_RSA_PUBLIC;
-    // G+D SmartCafé Expert
-//    final static byte  DEF_ALG = KeyPair.ALG_RSA;
-//    final static short DEF_KEY_LEN = (short) 2048;	// bits
-//    final static byte  DEF_CAKEYTYPE = KeyBuilder.TYPE_RSA_PUBLIC;
-
     // *** Extended function support
     private KeyPair[]	m_keyPair = null;	// Keeps all key pairs
     private byte[]	m_transferBuffer = null;
@@ -212,7 +202,7 @@ public class MyPGPid extends Applet {
 
     protected MyPGPid(byte[] buffer, short offset, byte length) {
 	// G+D uses non-zero offset, JCOP uses offset=0
-        if(length > 9) {
+        if (length > 9) {
     	    // data offset is used for application specific parameter.
     	    // initialization with default offset (AID offset).
     	    short dataOffset = offset;
@@ -296,9 +286,9 @@ public class MyPGPid extends Applet {
             fingerprintsCA = new DataObject((byte)00, (byte)0xc6, (short)60, true);
             dateGeneration = new DataObject((byte)00, (byte)0xcd, (short)12, true);
             signCount = new DataObject((byte)0, (byte)0x93, (short)3, true);
-            keySign = new KeyPair(DEF_ALG, DEF_KEY_LEN);
-            keyDecrypt = new KeyPair(DEF_ALG, DEF_KEY_LEN);
-            keyAuth = new KeyPair(DEF_ALG, DEF_KEY_LEN);
+            keySign = new KeyPair(DEF_ALG(), DEF_KEY_LEN());
+            keyDecrypt = new KeyPair(DEF_ALG(), DEF_KEY_LEN());
+            keyAuth = new KeyPair(DEF_ALG(), DEF_KEY_LEN());
             chv1 = new OwnerPIN(CHV_RETRY, CHV1_LENGTH);
             chv2 = new OwnerPIN(CHV_RETRY, CHV2_LENGTH);
             chv3 = new OwnerPIN(CHV_RETRY, CHV3_LENGTH);
@@ -310,17 +300,16 @@ public class MyPGPid extends Applet {
             cipher = Cipher.getInstance(Cipher.ALG_RSA_PKCS1, false);
             random = RandomData.getInstance(RandomData.ALG_SECURE_RANDOM);
             tmpData = JCSystem.makeTransientByteArray((short)512, JCSystem.CLEAR_ON_DESELECT);
-            
+
             // Set proper Algorithm Attributes according to defined preferences
-            Util.setShort(algAttrSign, (short)3, DEF_KEY_LEN);
-            Util.setShort(algAttrDec, (short)3, DEF_KEY_LEN);
-            Util.setShort(algAttrAuth, (short)3, DEF_KEY_LEN);
-            algAttrSign[5] = (DEF_ALG == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;
-            algAttrDec[5] = (DEF_ALG == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;
-            algAttrAuth[5] = (DEF_ALG == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;
-            
-                   
-            // END ORIGINAL CODE FROM JOpenPGPCard
+            Util.setShort(algAttrSign, (short)3, DEF_KEY_LEN());
+            Util.setShort(algAttrDec, (short)3, DEF_KEY_LEN());
+            Util.setShort(algAttrAuth, (short)3, DEF_KEY_LEN());
+            algAttrSign[5] = (DEF_ALG() == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;
+            algAttrDec[5] = (DEF_ALG() == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;
+            algAttrAuth[5] = (DEF_ALG() == KeyPair.ALG_RSA) ? (byte) 0x01 : (byte) 0x03;    
+            // END ORIGINAL CODE FROM JOpenPGPCard        
+
             
 	    // Register OP2 applet
 	    register(buffer, (short)(offset + 1), (byte)buffer[offset]);
@@ -330,6 +319,13 @@ public class MyPGPid extends Applet {
 	}               
     }
 
+    // *** Card-specific configuration - methods are overridden by card specific driver
+    public static short BuffSize() {return (short)0x300;};
+    public static byte UserConsent() {return (byte)0; };
+    public static byte DEF_ALG() { return KeyPair.ALG_RSA_CRT; };
+    public static short DEF_KEY_LEN() { return (short) 2048; };
+    public static byte DEF_CAKEYTYPE() {return KeyBuilder.TYPE_RSA_PUBLIC; };
+    
     public void deselect() {
         chv1.reset();
         chv2.reset();
